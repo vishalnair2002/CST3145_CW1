@@ -1,0 +1,251 @@
+<html>
+<head>
+    <title>After School Activities</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" 
+    integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
+
+</head>
+<body>
+    <!-- Vue.js app container with the id 'app' -->
+    <div id="app">
+        
+        <!-- Dropdown for sorting products by different attributes -->
+        <label for="sortAttribute">Sort by:</label>
+        <select v-model="sortBy" id="sortAttribute">
+            <option value="title">Subject</option>
+            <option value="location">Location</option>
+            <option value="price">Price</option>
+        </select>
+
+        <!-- Dropdown for choosing sort order (ascending or descending) -->
+        <label for="sortOrder">Sort order:</label>
+        <select v-model="sortOrder" id="sortOrder">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+        </select>
+
+        <!-- Header section with the site name -->
+        <header>
+            <h1 v-text="sitename"></h1>
+        </header>
+
+        <!-- Main section containing product cards and checkout form -->
+        <main>
+            <!-- Button to toggle the visibility of the checkout form -->
+            <button v-on:click="showCheckout" class="checkout-button">
+                {{ cartItemCount }}
+                <span class="fas fa-cart-plus"></span> Checkout
+            </button>
+
+            <!-- Product cards displayed in a card deck -->
+            <div class="card-deck">
+                <!-- Loop through products and display relevant information -->
+                <div v-for="product in sortedProducts" :key="product.id" class="card">
+                    <div v-if="showProduct">
+                        <!-- Display product details, image, and add to cart button -->
+                        <figure>
+                            <img :src="product.image" style="width: 200px; height: auto;">
+                        </figure>
+                        <h2 v-text="product.title"></h2>
+                        <p v-html="product.room"></p>
+                        <p v-html="product.location"></p>
+                        <p>Price: {{ product.price }}</p>
+                        <button v-on:click="addToCart(product)" v-if="canAddToCart(product)">
+                            Add to Cart
+                        </button>
+
+                        <!-- Display inventory status based on availability -->
+                        <span v-if="product.availableInventory === cartItemCount">
+                            All Out,
+                        </span>
+                        <span v-if="product.availableInventory - cartItemCount < 5">
+                            {{ product.availableInventory - cartItemCount }} left!
+                        </span>
+                        <span v-else>Buy Now!</span>
+
+                        <!-- Display product rating stars -->
+                        <div>
+                            <span v-for="n in product.rating">★</span>
+                            <span v-for="n in 5 - product.rating">☆</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout form displayed conditionally -->
+            <div v-if="showProduct">
+                <h2>Checkout</h2>
+                <!-- Input fields for first and last name in the order form -->
+                <p>
+                    <strong>First Name:</strong>
+                    <input v-model.trim="order.firstName"/>
+                </p>
+                <p>
+                    <strong>Last Name:</strong>
+                    <input v-model.trim="order.lastName"/>
+                </p>
+
+                <!-- Display order information based on input values -->
+                <h2>Order Information</h2>
+                <p>First Name: {{ order.firstName }} </p>
+                <p>Last Name: {{ order.lastName }} </p>
+                
+                <!-- Button to submit the order form -->
+                <button v-on:click="submitForm">Place Order</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="text/javascript">
+        var webstore = new Vue({
+            el: '#app',
+            data: {  // the 'data' option vue.instance
+            // the key 'sitename' matches the value of 'v-text' earlier
+                sitename: "After School Club & Activities",
+                products: [
+                    {
+                        rating: 3,
+                        id: 1001,
+                        title: "Math",
+                        room: "Classroom A",
+                        location:"Jumeirah",
+                        price: 100,
+                        image: "images/Math.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1002,
+                        title: "Science",
+                        room: "Lab B",
+                        location:"Al Qouz",
+                        price: 120,
+                        image: "images/Science.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1003,
+                        title: "English",
+                        room: "Room C",
+                        location:"JVC",
+                        price: 140,
+                        image: "images/English.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1004,
+                        title: "Music",
+                        room: "Music Room",
+                        location:"Marina",
+                        price: 125,
+                        image: "images/Music.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1005,
+                        title: "Football",
+                        location: "AL Wasl",
+                        price: 160,
+                        image: "images/Football.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1006,
+                        title: "Cricket",
+                        location: "Al Nasr",
+                        price: 160,
+                        image: "images/Cricket.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1007,
+                        title: "Chess",
+                        room: "Chess Club Room",
+                        location:"Greens",
+                        price: 145,
+                        image: "images/Chess.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1008,
+                        title: "Photography",
+                        room: "Art Studio",
+                        location:"Karama",
+                        price: 150,
+                        image: "images/Photography.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1009,
+                        title: "Arts",
+                        room: "Art Room",
+                        location:"Silicon",
+                        price: 110,
+                        image: "images/Arts.jpg",
+                        availableInventory: 5
+                    },
+                    {
+                        rating: 3,
+                        id: 1010,
+                        title: "Yoga",
+                        room: "Yoga Studio",
+                        location:"Falcon",
+                        price: 130,
+                        image: "images/Yoga.jpg",
+                        availableInventory: 5
+                    }
+            
+                ],
+                showProduct: true,
+                cart: [],
+                cartItemCount: 0,
+                order: {
+                    firstName: '',
+                    lastName: '',
+                },
+                sortBy: 'title',
+                sortOrder: 'asc',
+            },
+            
+            methods: { // Methods used for event handling and functionality
+                addToCart: function (product) {
+                    if (this.canAddToCart(product)) {
+                        this.cart.push(product.id);
+                        this.cartItemCount = this.cart.length;
+                    }
+                },
+                showCheckout(){
+                                this.showProduct=this.showProduct? false:true;
+                            },
+                canAddToCart: function (product) {
+                    return product.availableInventory > this.cartItemCount;
+                },
+                submitForm() {
+                    alert('Order Submitted!');
+                },
+            },
+            computed: { // Computed properties for dynamic data manipulation
+                sortedProducts: function () {
+                    const attribute = this.sortBy;
+                    const order = this.sortOrder === 'asc' ? 1 : -1;
+
+                    return this.products.slice().sort((a, b) => {
+                        if (a[attribute] < b[attribute]) return -1 * order;
+                        if (a[attribute] > b[attribute]) return 1 * order;
+                        return 0;
+                    });
+                },
+            },
+        });   
+    </script>
+</body>
+</html>
