@@ -1,0 +1,208 @@
+<html>
+<head>
+    <title>After School Activities</title>
+    <!-- Link to external stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+    integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
+    <!-- Link to Vue.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <!-- Link to external JavaScript file containing product data -->
+    <script src="activities&clubs.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Sorting options -->
+        <label for="sortAttribute">Sort by:</label>
+        <select v-model="sortBy" id="sortAttribute">
+            <option value="title">Subject</option>
+            <option value="location">Location</option>
+            <option value="price">Price</option>
+        </select>
+
+        <label for="sortOrder">Sort order:</label>
+        <select v-model="sortOrder" id="sortOrder">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+        </select>
+
+        <!-- Search bar -->
+        <label for="search">Search:</label>
+        <input v-model.trim="searchTerm" id="search" placeholder="Search for Activities">
+
+        <!-- Header section -->
+        <header>
+            <h1>{{ sitename }}</h1>
+        </header>
+
+        <!-- Main content -->
+        <main>
+            <!-- Checkout button -->
+            <button v-on:click="showCheckout" class="checkout-button" :disabled="isCartEmpty">
+                {{ cartItemCount }}
+                <span class="fas fa-cart-plus"></span> Checkout
+            </button>
+
+            <!-- Product cards -->
+            <div class="card-deck">
+                <div v-for="product in filteredProducts" :key="product.id" class="card">
+                    <div>
+                        <!-- Product details -->
+                        <figure>
+                            <img :src="product.image" style="width: 200px; height: auto;">
+                        </figure>
+                        <h2>{{ product.title }}</h2>
+                        <p v-if="product.room">{{ product.room }}</p>
+                        <p v-if="product.location">{{ product.location }}</p>
+                        <p>Price: {{ product.price }}</p>
+
+                        <!-- Add to Cart button -->
+                        <button v-on:click="addToCart(product)" v-if="canAddToCart(product)">
+                            Add to Cart
+                        </button>
+
+                        <!-- Inventory status -->
+                        <span v-if="product.availableInventory === cartItemCount">
+                            All Out
+                        </span>
+                        <span v-else-if="product.availableInventory - cartItemCount < 5">
+                            {{ product.availableInventory - cartItemCount }} left!
+                        </span>
+                        <span v-else>Buy Now!</span>
+
+                        <!-- Product rating -->
+                        <div>
+                            <span v-for="n in product.rating">★</span>
+                            <span v-for="n in 5 - product.rating">☆</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout form -->
+            <div v-if="showCheckoutForm">
+                <h2>Checkout</h2>
+                <p><strong>First Name:</strong> <input v-model.trim="order.firstName"/></p>
+                <p><strong>Last Name:</strong> <input v-model.trim="order.lastName"/></p>
+                <p>
+                    <strong>Phone Number:</strong>
+                    <input v-model.trim="order.phone" type="tel" pattern="[0-9]*" 
+                    placeholder="Enter numbers only"/>
+                </p>
+    
+                <!-- Display added products in the checkout form -->
+                <h2>Added to Cart</h2>
+                <ul>
+                    <li v-for="item in cartItems" :key="item.id">
+                        {{ item.title }} - ${{ item.price }}
+                    </li>
+                </ul>
+    
+                <!-- Place Order button (enabled only if first name, last name, phone, and cart are not empty) -->
+                <button v-on:click="submitForm" :disabled="!canPlaceOrder">Place Order</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Vue.js script -->
+    <script type="text/javascript">
+        var webstore = new Vue({
+            el: '#app',
+            data: {
+                sitename: "After School Club & Activities",
+                products: activitiesAndClubsData,
+                showCheckoutForm: false,
+                cart: [],
+                cartItemCount: 0,
+                order: {
+                    firstName: '',
+                    lastName: '',
+                    phone: '', 
+                },
+                cartItems: [], // Array to store details of products added to the cart
+                sortBy: 'title',
+                sortOrder: 'asc',
+                searchTerm: '',
+            },
+            
+            methods: {
+                // Add product to the shopping cart
+                addToCart: function (product) {
+                    if (this.canAddToCart(product)) {
+                        this.cart.push(product.id);
+                        this.cartItemCount = this.cart.length;
+    
+                        // Add product details to the cartItems array
+                        this.cartItems.push({
+                            id: product.id,
+                            title: product.title,
+                            price: product.price,
+                        });
+                    }
+                },
+                // Toggle the visibility of the checkout form
+                showCheckout() {
+                    this.showCheckoutForm = !this.showCheckoutForm;
+                },
+                // Check if a product can be added to the cart based on available inventory
+                canAddToCart: function (product) {
+                    return product.availableInventory > this.cartItemCount;
+                },
+                // Submit the form and display an alert if checkout information is filled
+                submitForm: function () {
+                    if (this.canPlaceOrder) {
+                        // Display an alert with a message
+                        alert('Order Submitted! Thank you for your purchase.');
+    
+                        // Reset the form and cart after successful submission
+                        this.order.firstName = '';
+                        this.order.lastName = '';
+                        this.order.phone = '';
+                        this.cart = [];
+                        this.cartItemCount = 0;
+                        this.cartItems = [];
+                        this.showCheckoutForm = false;
+                    } else {
+                        // Display a message indicating that checkout information is required
+                        alert('Please fill in the checkout information.');
+                    }
+                },
+            },
+            computed: {
+                // Compute sorted products based on selected sorting options
+                sortedProducts: function () {
+                    const attribute = this.sortBy;
+                    const order = this.sortOrder === 'asc' ? 1 : -1;
+    
+                    return this.products.slice().sort((a, b) => {
+                        if (a[attribute] < b[attribute]) return -1 * order;
+                        if (a[attribute] > b[attribute]) return 1 * order;
+                        return 0;
+                    });
+                },
+                // Compute filtered products based on search term
+                filteredProducts: function () {
+                    const searchTerm = this.searchTerm.toLowerCase();
+                    return this.sortedProducts.filter(product =>
+                        product.title.toLowerCase().includes(searchTerm) ||
+                        (product.room && product.room.toLowerCase().includes(searchTerm)) ||
+                        (product.location && product.location.toLowerCase().includes(searchTerm))
+                    );
+                },
+                // Check if the cart is empty
+                isCartEmpty: function () {
+                    return this.cartItemCount === 0;
+                },
+                // Check if the order form can be submitted (enabled only if first name, last name, and cart are not empty)
+                canPlaceOrder: function () {
+                    return this.order.firstName.trim() !== '' &&
+                           this.order.lastName.trim() !== '' &&
+                           this.order.phone.trim() !== '' &&
+                           /^\d+$/.test(this.order.phone) && // Check if phone contains only numeric characters
+                           this.cart.length > 0;
+                },
+            },
+        });
+    </script>
+</body>
+</html>
