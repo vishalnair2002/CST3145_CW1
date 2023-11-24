@@ -1,17 +1,18 @@
 <html>
 <head>
     <title>After School Activities</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <!-- Link to external stylesheets -->
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" 
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
     integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
-
+    <!-- Link to Vue.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <!-- Link to external JavaScript file containing product data -->
+    <script src="activities&clubs.js"></script>
 </head>
 <body>
-    <!-- Vue.js app container with the id 'app' -->
     <div id="app">
-        
-        <!-- Dropdown for sorting products by different attributes -->
+        <!-- Sorting options -->
         <label for="sortAttribute">Sort by:</label>
         <select v-model="sortBy" id="sortAttribute">
             <option value="title">Subject</option>
@@ -19,53 +20,57 @@
             <option value="price">Price</option>
         </select>
 
-        <!-- Dropdown for choosing sort order (ascending or descending) -->
         <label for="sortOrder">Sort order:</label>
         <select v-model="sortOrder" id="sortOrder">
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
         </select>
 
-        <!-- Header section with the site name -->
+        <!-- Search bar -->
+        <label for="search">Search:</label>
+        <input v-model.trim="searchTerm" id="search" placeholder="Search for Activities">
+
+        <!-- Header section -->
         <header>
-            <h1 v-text="sitename"></h1>
+            <h1>{{ sitename }}</h1>
         </header>
 
-        <!-- Main section containing product cards and checkout form -->
+        <!-- Main content -->
         <main>
-            <!-- Button to toggle the visibility of the checkout form -->
-            <button v-on:click="showCheckout" class="checkout-button">
+            <!-- Checkout button -->
+            <button v-on:click="showCheckout" class="checkout-button" :disabled="isCartEmpty">
                 {{ cartItemCount }}
                 <span class="fas fa-cart-plus"></span> Checkout
             </button>
 
-            <!-- Product cards displayed in a card deck -->
+            <!-- Product cards -->
             <div class="card-deck">
-                <!-- Loop through products and display relevant information -->
-                <div v-for="product in sortedProducts" :key="product.id" class="card">
-                    <div v-if="showProduct">
-                        <!-- Display product details, image, and add to cart button -->
+                <div v-for="product in filteredProducts" :key="product.id" class="card">
+                    <div>
+                        <!-- Product details -->
                         <figure>
                             <img :src="product.image" style="width: 200px; height: auto;">
                         </figure>
-                        <h2 v-text="product.title"></h2>
-                        <p v-html="product.room"></p>
-                        <p v-html="product.location"></p>
-                        <p>Price: {{ product.price }}</p>
+                        <h2>{{ product.title }}</h2>
+                        <p v-if="product.room">{{ product.room }}</p>
+                        <p v-if="product.location">{{ product.location }}</p>
+                        <p>Price: AED {{ product.price }}</p>
+
+                        <!-- Add to Cart button -->
                         <button v-on:click="addToCart(product)" v-if="canAddToCart(product)">
                             Add to Cart
                         </button>
 
-                        <!-- Display inventory status based on availability -->
+                        <!-- Inventory status -->
                         <span v-if="product.availableInventory === cartItemCount">
-                            All Out,
+                            All Out
                         </span>
-                        <span v-if="product.availableInventory - cartItemCount < 5">
+                        <span v-else-if="product.availableInventory - cartItemCount < 5">
                             {{ product.availableInventory - cartItemCount }} left!
                         </span>
                         <span v-else>Buy Now!</span>
 
-                        <!-- Display product rating stars -->
+                        <!-- Product rating -->
                         <div>
                             <span v-for="n in product.rating">★</span>
                             <span v-for="n in 5 - product.rating">☆</span>
@@ -74,178 +79,133 @@
                 </div>
             </div>
 
-            <!-- Checkout form displayed conditionally -->
-            <div v-if="showProduct">
+            <!-- Checkout form -->
+            <div v-if="showCheckoutForm">
                 <h2>Checkout</h2>
-                <!-- Input fields for first and last name in the order form -->
+                <p><strong>First Name:</strong> <input v-model.trim="order.firstName"/></p>
+                <p><strong>Last Name:</strong> <input v-model.trim="order.lastName"/></p>
                 <p>
-                    <strong>First Name:</strong>
-                    <input v-model.trim="order.firstName"/>
+                    <strong>Phone Number:</strong>
+                    <input v-model.trim="order.phone" type="tel" pattern="[0-9]*" 
+                    placeholder="Enter numbers only"/>
                 </p>
-                <p>
-                    <strong>Last Name:</strong>
-                    <input v-model.trim="order.lastName"/>
-                </p>
-
-                <!-- Display order information based on input values -->
-                <h2>Order Information</h2>
-                <p>First Name: {{ order.firstName }} </p>
-                <p>Last Name: {{ order.lastName }} </p>
-                
-                <!-- Button to submit the order form -->
-                <button v-on:click="submitForm">Place Order</button>
+    
+                <!-- Display added products in the checkout form -->
+                <h2>Added to Cart</h2>
+                <ul>
+                    <li v-for="item in cartItems" :key="item.id">
+                        {{ item.title }} - AED{{ item.price }}
+                    </li>
+                </ul>
+    
+                <!-- Place Order button (enabled only if first name, last name, phone, and cart are not empty) -->
+                <button v-on:click="submitForm" :disabled="!canPlaceOrder">Place Order</button>
             </div>
         </main>
     </div>
 
+    <!-- Vue.js script -->
     <script type="text/javascript">
         var webstore = new Vue({
             el: '#app',
-            data: {  // the 'data' option vue.instance
-            // the key 'sitename' matches the value of 'v-text' earlier
+            data: {
                 sitename: "After School Club & Activities",
-                products: [
-                    {
-                        rating: 3,
-                        id: 1001,
-                        title: "Math",
-                        room: "Classroom A",
-                        location:"Jumeirah",
-                        price: 100,
-                        image: "images/Math.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1002,
-                        title: "Science",
-                        room: "Lab B",
-                        location:"Al Qouz",
-                        price: 120,
-                        image: "images/Science.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1003,
-                        title: "English",
-                        room: "Room C",
-                        location:"JVC",
-                        price: 140,
-                        image: "images/English.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1004,
-                        title: "Music",
-                        room: "Music Room",
-                        location:"Marina",
-                        price: 125,
-                        image: "images/Music.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1005,
-                        title: "Football",
-                        location: "AL Wasl",
-                        price: 160,
-                        image: "images/Football.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1006,
-                        title: "Cricket",
-                        location: "Al Nasr",
-                        price: 160,
-                        image: "images/Cricket.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1007,
-                        title: "Chess",
-                        room: "Chess Club Room",
-                        location:"Greens",
-                        price: 145,
-                        image: "images/Chess.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1008,
-                        title: "Photography",
-                        room: "Art Studio",
-                        location:"Karama",
-                        price: 150,
-                        image: "images/Photography.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1009,
-                        title: "Arts",
-                        room: "Art Room",
-                        location:"Silicon",
-                        price: 110,
-                        image: "images/Arts.jpg",
-                        availableInventory: 5
-                    },
-                    {
-                        rating: 3,
-                        id: 1010,
-                        title: "Yoga",
-                        room: "Yoga Studio",
-                        location:"Falcon",
-                        price: 130,
-                        image: "images/Yoga.jpg",
-                        availableInventory: 5
-                    }
-            
-                ],
-                showProduct: true,
+                products: activitiesAndClubsData,
+                showCheckoutForm: false,
                 cart: [],
                 cartItemCount: 0,
                 order: {
                     firstName: '',
                     lastName: '',
+                    phone: '', 
                 },
+                cartItems: [], // Array to store details of products added to the cart
                 sortBy: 'title',
                 sortOrder: 'asc',
+                searchTerm: '',
             },
             
-            methods: { // Methods used for event handling and functionality
+            methods: {
+                // Add product to the shopping cart
                 addToCart: function (product) {
                     if (this.canAddToCart(product)) {
                         this.cart.push(product.id);
                         this.cartItemCount = this.cart.length;
+    
+                        // Add product details to the cartItems array
+                        this.cartItems.push({
+                            id: product.id,
+                            title: product.title,
+                            price: product.price,
+                        });
                     }
                 },
-                showCheckout(){
-                                this.showProduct=this.showProduct? false:true;
-                            },
+                // Toggle the visibility of the checkout form
+                showCheckout() {
+                    this.showCheckoutForm = !this.showCheckoutForm;
+                },
+                // Check if a product can be added to the cart based on available inventory
                 canAddToCart: function (product) {
                     return product.availableInventory > this.cartItemCount;
                 },
-                submitForm() {
-                    alert('Order Submitted!');
+                // Submit the form and display an alert if checkout information is filled
+                submitForm: function () {
+                    if (this.canPlaceOrder) {
+                        // Display an alert with a message
+                        alert('Order Submitted! Thank you for your purchase.');
+    
+                        // Reset the form and cart after successful submission
+                        this.order.firstName = '';
+                        this.order.lastName = '';
+                        this.order.phone = '';
+                        this.cart = [];
+                        this.cartItemCount = 0;
+                        this.cartItems = [];
+                        this.showCheckoutForm = false;
+                    } else {
+                        // Display a message indicating that checkout information is required
+                        alert('Please fill in the checkout information.');
+                    }
                 },
             },
-            computed: { // Computed properties for dynamic data manipulation
+            computed: {
+                // Compute sorted products based on selected sorting options
                 sortedProducts: function () {
                     const attribute = this.sortBy;
                     const order = this.sortOrder === 'asc' ? 1 : -1;
-
+    
                     return this.products.slice().sort((a, b) => {
                         if (a[attribute] < b[attribute]) return -1 * order;
                         if (a[attribute] > b[attribute]) return 1 * order;
                         return 0;
                     });
                 },
+                // Compute filtered products based on search term
+                filteredProducts: function () {
+                    const searchTerm = this.searchTerm.toLowerCase();
+                    return this.sortedProducts.filter(product =>
+                        product.title.toLowerCase().includes(searchTerm) ||
+                        (product.room && product.room.toLowerCase().includes(searchTerm)) ||
+                        (product.location && product.location.toLowerCase().includes(searchTerm))
+                    );
+                },
+                // Check if the cart is empty
+                isCartEmpty: function () {
+                    return this.cartItemCount === 0;
+                },
+                // Check if the order form can be submitted (enabled only if first name, last name, and cart are not empty)
+                canPlaceOrder: function () {
+                    return this.order.firstName.trim() !== '' &&
+                           this.order.lastName.trim() !== '' &&
+                           this.order.phone.trim() !== '' &&
+                           /^\d+$/.test(this.order.phone) && // Check if phone contains only numeric characters
+                           this.cart.length > 0;
+                },
             },
-        });   
+        });
     </script>
 </body>
 </html>
+
+file:///C:/Users/User/Desktop/CST3145/CW1/CST3145_CW1/AfterSchoolActivites.html
+https://github.com/vishalnair2002/CST3145_CW1.git
