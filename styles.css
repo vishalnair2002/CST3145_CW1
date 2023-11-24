@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 header {
     text-align: center;
     color: rgb(7, 11, 220);
@@ -72,3 +73,79 @@ label[for="search"] {
     border-radius: 4px;
     margin-right: 10px;
 }
+=======
+header {
+    text-align: center;
+    color: rgb(7, 11, 220);
+}
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #e3d7d7;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+#app {
+    max-width: 800px;
+    margin: 20px auto;
+}
+.card-deck {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.card {
+    border: 5px solid #050505;
+    padding: 15px;
+    margin: 10px;
+    text-align: center;
+    max-width: 200px;
+    background-color: #fff;
+    border-radius: 10px;
+    transition: transform 0.3s;
+    
+}
+.card:hover {
+    transform: scale(1.05);
+}
+.card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+.checkout-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 30px;
+}
+label {
+    margin-left: 10px;
+}
+select {
+    padding: 5px;
+    font-size: 16px;
+    border-radius: 5px;
+}
+label[for="search"] {
+    margin-left: 10px;
+}
+
+#search {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+>>>>>>> e8deaa4312c6baf1612502e78d5499b7f0179840
